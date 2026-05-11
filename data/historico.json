@@ -1,6 +1,13 @@
 [
   {
     "data": "11/05/2026",
+    "hora": "06:34",
+    "colaborador": "STEFANI",
+    "turno": "19 x 07",
+    "matricula": "459478"
+  },
+  {
+    "data": "11/05/2026",
     "hora": "05:45",
     "colaborador": "STEFANI",
     "turno": "19 x 07",
