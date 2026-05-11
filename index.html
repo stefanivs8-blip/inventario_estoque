@@ -24,62 +24,68 @@
 
 <script>
 async function enviarDadosParaGithub() {
-    const token = document.getElementById('githubToken').value;
+    const tokenInput = document.getElementById('githubToken');
+    const token = tokenInput ? tokenInput.value.trim() : "";
     const repo = "stefanivs8-blip/inventario_estoque";
-    const path = "inventario_logistica.txt"; // O arquivo que será criado no GitHub
+    const path = "inventario_logistica.txt"; 
 
-    if (!token) {
-        alert("Por favor, cole seu Token de acesso antes de salvar.");
+    if (!token || !token.startsWith('ghp_')) {
+        alert("⚠️ O Token parece inválido ou está vazio. Ele deve começar com 'ghp_'.");
         return;
     }
 
-    // AQUI: Ajuste o 'id' para o ID do campo onde você digita os dados do inventário
-    // Se for uma tabela, precisaremos de uma lógica para varrer as linhas.
-    const conteudoInventario = document.body.innerText; // Pega todo o texto da página como backup
+    // Pega o texto da página para salvar
+    const conteudoInventario = "Relatório de Inventário\nData: " + new Date().toLocaleString('pt-BR') + "\n\n" + document.body.innerText;
 
     try {
-        // 1. Verificar se o arquivo já existe para pegar o SHA
-        const url = `https://api.github.com/repos/${repo}/contents/${path}`;
-        const response = await fetch(url, {
-            headers: { "Authorization": `token ${token}` }
-        });
+        const url = `https://api.github.com/repos/${repo}/contents/${path}?t=${new Date().getTime()}`; // 't' evita o cache
         
+        // 1. Tentar buscar o arquivo para ver se ele existe (SHA)
+        const getFile = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Usando Bearer (mais moderno)
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
         let sha = "";
-        if (response.ok) {
-            const data = await response.json();
+        if (getFile.ok) {
+            const data = await getFile.json();
             sha = data.sha;
+        } else if (getFile.status !== 404) {
+            const errorData = await getFile.json();
+            alert("❌ Erro de Autenticação: " + (errorData.message || "Verifique o Token"));
+            return;
         }
 
-        // 2. Preparar o envio (Base64)
-        const mensagem = `Inventário atualizado em: ${new Date().toLocaleString('pt-BR')}`;
-        const conteudoBase64 = btoa(unescape(encodeURIComponent(conteudoInventario)));
-
-        const saveResponse = await fetch(url, {
+        // 2. Enviar a atualização
+        const saveResponse = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
             method: "PUT",
             headers: {
-                "Authorization": `token ${token}`,
+                "Authorization": `Bearer ${token}`,
+                "Accept": "application/vnd.github.v3+json",
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                message: mensagem,
-                content: conteudoBase64,
-                sha: sha 
+                message: "📦 Inventário via Mobile - " + new Date().toISOString(),
+                content: btoa(unescape(encodeURIComponent(conteudoInventario))),
+                sha: sha // O SHA é obrigatório se o arquivo já existir
             })
         });
 
         if (saveResponse.ok) {
-            alert("✅ Salvo no GitHub com sucesso!");
+            alert("✅ SUCESSO! O inventário foi salvo no seu GitHub.");
         } else {
-            const errorData = await saveResponse.json();
-            alert("❌ Erro ao salvar: " + errorData.message);
+            const errorDetails = await saveResponse.json();
+            alert("❌ ERRO DO GITHUB: " + errorDetails.message);
         }
     } catch (error) {
-        alert("❌ Falha de conexão. Verifique o sinal da rede no terminal.");
+        alert("❌ ERRO DE REDE: Possível queda de sinal no porto ou bloqueio do navegador.");
         console.error(error);
     }
 }
 </script>
-    
 <body>
 
 <!-- LOADING -->
