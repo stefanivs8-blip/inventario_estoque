@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta de Estoque · Portocel</title>
+  <link rel="stylesheet" href="css/portocel.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo"><img id="header-logo" src="" alt="Portocel"></div>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="inventario.html">Inventário</a>
+      <a href="estoque.html" class="active">Estoque</a>
+      <a href="historico.html">Histórico</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Estoque Atual em Santos</h2>
+      </div>
+      <table id="tabela-estoque" style="width:100%; border-collapse: collapse; margin-top:10px;">
+        <thead>
+          <tr style="text-align:left; border-bottom: 2px solid #eee;">
+            <th style="padding:12px">Item</th>
+            <th style="padding:12px">Qtd Atual</th>
+            <th style="padding:12px">Mínimo</th>
+            <th style="padding:12px">Status</th>
+          </tr>
+        </thead>
+        <tbody id="lista-estoque">
+          </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="js/logo.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/github.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('header-logo').src = PORTOCEL_LOGO;
+      if(typeof APP !== 'undefined') {
+        await APP.init();
+        const lista = document.getElementById('lista-estoque');
+        lista.innerHTML = APP.estoque.items.map(i => {
+          const critico = i.qty < i.min;
+          return `<tr style="border-bottom: 1px solid #eee;">
+            <td style="padding:12px">${i.name}</td>
+            <td style="padding:12px; font-weight:bold; color:${critico ? 'red' : 'green'}">${i.qty}</td>
+            <td style="padding:12px">${i.min}</td>
+            <td style="padding:12px">${critico ? '⚠ Repor' : '✅ OK'}</td>
+          </tr>`;
+        }).join('');
+      }
+    });
+  </script>
+</body>
+</html>
