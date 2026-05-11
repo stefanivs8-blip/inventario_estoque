@@ -56,10 +56,13 @@
       <div id="turno-row" style="display:none">
         <div class="grid-2">
           <div class="field">
-            <label>Turno</label>
+            <label>Equipe</label>
             <div style="padding:8px 0"><span class="turno-tag" id="turno-label">—</span></div>
           </div>
-          <div class="field"><label>Horário do turno</label><input type="text" id="inv-turno-hora" readonly></div>
+          <div class="field">
+            <label>Turno Operacional</label>
+            <input type="text" id="inv-turno-hora" readonly>
+          </div>
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-top:8px">
@@ -72,45 +75,24 @@
   </div>
 
   <div id="step-2" style="display:none">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <button class="btn btn-ghost btn-sm" onclick="goStep(1)">← Voltar</button>
-      <h2 style="font-size:18px;font-weight:700;color:var(--azul)">Contagem de Itens</h2>
-    </div>
-
     <div id="itens-lista" style="margin-top:10px"></div>
-
-    <div class="card" style="margin-top:4px">
-      <button class="btn btn-primary btn-full btn-lg" onclick="goStep(3)">
-        Concluir e Assinar
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-      </button>
+    <div class="card" style="margin-top:10px">
+      <button class="btn btn-primary btn-full btn-lg" onclick="goStep(3)">Concluir e Assinar</button>
     </div>
   </div>
 
   <div id="step-3" style="display:none">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <button class="btn btn-ghost btn-sm" onclick="goStep(2)">← Voltar</button>
-      <h2 style="font-size:18px;font-weight:700;color:var(--azul)">Assinatura</h2>
-    </div>
-
     <div class="card">
-      <div class="card-title" style="margin-bottom:16px">
-        Confirmação do Responsável
-      </div>
       <div class="field">
         <label>Número de Matrícula</label>
         <input type="text" id="matricula" placeholder="Digite sua matrícula">
       </div>
       <div class="field">
         <label>Assinatura</label>
-        <canvas id="sig-canvas"></canvas>
-        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-          <button class="btn btn-ghost btn-sm" onclick="sig.clear()">Limpar</button>
-        </div>
+        <canvas id="sig-canvas" style="border:1px solid #ccc; width:100%; height:150px;"></canvas>
+        <button class="btn btn-ghost btn-sm" onclick="sig.clear()" style="margin-top:5px">Limpar</button>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:8px">
-        <button class="btn btn-primary" onclick="goStep(4)">Ver Resumo</button>
-      </div>
+      <button class="btn btn-primary btn-full" onclick="goStep(4)">Ver Resumo</button>
     </div>
   </div>
 
@@ -124,7 +106,7 @@
 <script src="js/github.js"></script>
 <script src="js/utils.js"></script>
 <script>
-let inv = { colab:'', turno:'', turnoHora:'', data:'', hora:'', counts:{}, photos:{}, matricula:'', sigData:'' };
+let inv = { colab:'', turno:'', turnoHora:'', data:'', hora:'', counts:{}, matricula:'', sigData:'' };
 let sig = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -135,7 +117,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('inv-hora').value = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
   inv.data = now.toLocaleDateString('pt-BR');
   inv.hora = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-  inv.timestamp = now.toISOString();
 
   if (typeof APP !== 'undefined') await APP.carregar();
 
@@ -151,13 +132,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// LÓGICA DE TURNOS AJUSTADA: 07x19 e 19x07
+// LÓGICA DE TURNOS SOLICITADA: 07x19 e 19x07
 function getTurnoAtual() {
     const hora = new Date().getHours();
+    // Se for entre 07:00 e 18:59
     if (hora >= 7 && hora < 19) {
-        return { label: "07 x 19" };
+        return "07 x 19";
     } else {
-        return { label: "19 x 07" };
+        // Se for entre 19:00 e 06:59 (madrugada inclusa)
+        return "19 x 07";
     }
 }
 
@@ -171,12 +154,10 @@ function onSelectColab() {
   
   inv.colab = e.nome; 
   inv.turno = e.turno;
-  
-  const t = getTurnoAtual();
-  inv.turnoHora = t.label;
+  inv.turnoHora = getTurnoAtual();
   
   document.getElementById('turno-label').textContent = `Equipe ${e.turno}`;
-  document.getElementById('inv-turno-hora').value = t.label;
+  document.getElementById('inv-turno-hora').value = inv.turnoHora;
   document.getElementById('turno-row').style.display = '';
   btn.disabled = false;
 }
@@ -197,7 +178,7 @@ function renderItens() {
   document.getElementById('itens-lista').innerHTML = items.map(item => {
     const qty = inv.counts[item.id];
     return `
-    <div class="item-card" id="ic-${item.id}">
+    <div class="item-card">
       <div class="item-card-header">
         <span class="item-card-name">${item.name}</span>
         <span class="badge">${item.cat}</span>
@@ -221,11 +202,12 @@ function adjInv(id, d) {
 function renderResumo() {
   document.getElementById('resumo-content').innerHTML = `
     <div class="card">
-      <h3>Resumo do Inventário</h3>
+      <h3 style="color:var(--azul);margin-bottom:15px">Resumo do Inventário</h3>
       <p><strong>Colaborador:</strong> ${inv.colab}</p>
-      <p><strong>Turno:</strong> ${inv.turnoHora}</p>
+      <p><strong>Turno Operacional:</strong> ${inv.turnoHora}</p>
       <p><strong>Data/Hora:</strong> ${inv.data} às ${inv.hora}</p>
-      <button class="btn btn-success btn-full" onclick="salvar()" id="btn-salvar">Confirmar e Salvar</button>
+      <hr style="margin:15px 0; border:0; border-top:1px solid #eee">
+      <button class="btn btn-success btn-full" onclick="salvar()" id="btn-salvar">Confirmar e Salvar no GitHub</button>
     </div>
   `;
 }
@@ -233,21 +215,23 @@ function renderResumo() {
 async function salvar() {
   const btn = document.getElementById('btn-salvar');
   btn.disabled = true;
-  if (typeof showLoading === 'function') showLoading('Salvando...');
   
+  // Atualiza as quantidades no objeto global antes de salvar
   APP.estoque.items.forEach(i => { i.qty = inv.counts[i.id] ?? i.qty; });
   
   try {
     await APP.salvarTudo({
-        timestamp: inv.timestamp,
+        data: inv.data,
+        hora: inv.hora,
         colaborador: inv.colab,
-        turno: inv.turnoHora
+        turno: inv.turnoHora,
+        matricula: inv.matricula
     });
+    alert('Inventário salvo com sucesso!');
     location.href = 'index.html';
   } catch (e) {
     btn.disabled = false;
-    if (typeof hideLoading === 'function') hideLoading();
-    alert('Erro ao salvar');
+    alert('Erro ao salvar no GitHub. Verifique sua conexão ou Token.');
   }
 }
 </script>
