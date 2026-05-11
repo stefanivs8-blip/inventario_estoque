@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Inventários · Portocel</title>
+  <link rel="stylesheet" href="css/portocel.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo"><img id="header-logo" src="" alt="Portocel"></div>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="inventario.html">Inventário</a>
+      <a href="estoque.html">Estoque</a>
+      <a href="historico.html" class="active">Histórico</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">Últimas Contagens Realizadas</h2></div>
+      <div id="lista-historico">
+        </div>
+    </div>
+  </main>
+
+  <script src="js/logo.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/github.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('header-logo').src = PORTOCEL_LOGO;
+      if(typeof APP !== 'undefined') {
+        await APP.init();
+        const container = document.getElementById('lista-historico');
+        if(!APP.historico.length) {
+          container.innerHTML = '<p style="padding:20px; color:#666">Nenhum registro encontrado.</p>';
+          return;
+        }
+        container.innerHTML = APP.historico.map(h => `
+          <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center">
+            <div>
+              <strong>${h.colaborador} (Turno ${h.turno})</strong><br>
+              <small style="color:#666">${h.data} às ${h.hora}</small>
+            </div>
+            <div style="text-align:right">
+              <span style="font-size:12px; background:#eef2ff; padding:4px 8px; border-radius:4px">Contagem realizada</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    });
+  </script>
+</body>
+</html>
