@@ -13,7 +13,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventário · Portocel</title>
     ...
-  
+
+<div style="background: #f4f4f4; padding: 15px; border: 1px solid #ccc; margin-top: 20px; border-radius: 8px;">
+    <h4>Conexão com GitHub</h4>
+    <input type="password" id="githubToken" placeholder="Cole seu Token aqui" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+    <button onclick="enviarDadosParaGithub()" style="background: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; width: 100%;">
+        Confirmar e Salvar Inventário
+    </button>
+</div>
+
+<script>
+async function enviarDadosParaGithub() {
+    const token = document.getElementById('githubToken').value;
+    const repo = "stefanivs8-blip/inventario_estoque";
+    const path = "inventario_logistica.txt"; // O arquivo que será criado no GitHub
+
+    if (!token) {
+        alert("Por favor, cole seu Token de acesso antes de salvar.");
+        return;
+    }
+
+    // AQUI: Ajuste o 'id' para o ID do campo onde você digita os dados do inventário
+    // Se for uma tabela, precisaremos de uma lógica para varrer as linhas.
+    const conteudoInventario = document.body.innerText; // Pega todo o texto da página como backup
+
+    try {
+        // 1. Verificar se o arquivo já existe para pegar o SHA
+        const url = `https://api.github.com/repos/${repo}/contents/${path}`;
+        const response = await fetch(url, {
+            headers: { "Authorization": `token ${token}` }
+        });
+        
+        let sha = "";
+        if (response.ok) {
+            const data = await response.json();
+            sha = data.sha;
+        }
+
+        // 2. Preparar o envio (Base64)
+        const mensagem = `Inventário atualizado em: ${new Date().toLocaleString('pt-BR')}`;
+        const conteudoBase64 = btoa(unescape(encodeURIComponent(conteudoInventario)));
+
+        const saveResponse = await fetch(url, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                message: mensagem,
+                content: conteudoBase64,
+                sha: sha 
+            })
+        });
+
+        if (saveResponse.ok) {
+            alert("✅ Salvo no GitHub com sucesso!");
+        } else {
+            const errorData = await saveResponse.json();
+            alert("❌ Erro ao salvar: " + errorData.message);
+        }
+    } catch (error) {
+        alert("❌ Falha de conexão. Verifique o sinal da rede no terminal.");
+        console.error(error);
+    }
+}
+</script>
+    
 <body>
 
 <!-- LOADING -->
