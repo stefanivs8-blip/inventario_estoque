@@ -144,7 +144,18 @@
 
 <div id="toast"></div>
 
-<script src="js/logo.js"></script>
+<script>
+  // Link direto da logo para garantir que carrega
+  const PORTOCEL_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Logotipo_Portocel.png/800px-Logotipo_Portocel.png";
+  
+  // Forçar a imagem a carregar assim que a página abrir
+  window.onload = function() {
+    const img = document.getElementById('header-logo');
+    if (img) {
+      img.src = PORTOCEL_LOGO;
+    }
+  };
+</script>
 <script src="js/github.js"></script>
 <script src="js/utils.js"></script>
 <script>
