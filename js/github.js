@@ -42,7 +42,7 @@ const GH = (() => {
     const res = await fetch(`${apiBase()}/contents/${path}`, { headers: headers() });
     if (!res.ok) throw new Error(`Erro ao ler ${path}: ${res.status}`);
     const data = await res.json();
-    const content = decodeURIComponent(escape(atob(data.content)));
+  const content = new TextDecoder("utf-8").decode(Uint8Array.from(atob(data.content), c => c.charCodeAt(0)));
     return { content: JSON.parse(content), sha: data.sha };
   }
 
