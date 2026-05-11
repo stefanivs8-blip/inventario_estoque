@@ -199,19 +199,101 @@ function adjInv(id, d) {
   document.getElementById('qn-' + id).textContent = inv.counts[id];
 }
 
-function renderResumo() {
+function function renderResumo() {
   document.getElementById('resumo-content').innerHTML = `
     <div class="card">
       <h3 style="color:var(--azul);margin-bottom:15px">Resumo do Inventário</h3>
       <p><strong>Colaborador:</strong> ${inv.colab}</p>
       <p><strong>Turno Operacional:</strong> ${inv.turnoHora}</p>
       <p><strong>Data/Hora:</strong> ${inv.data} às ${inv.hora}</p>
+      
+      <div class="field" style="margin-top:20px; border-top:1px solid #eee; padding-top:15px">
+        <label style="color:red; font-weight:bold">Chave de Acesso (Token GitHub)</label>
+        <input type="password" id="gh-token-mobile" placeholder="Cole seu ghp_ aqui" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px">
+      </div>
+
       <hr style="margin:15px 0; border:0; border-top:1px solid #eee">
       <button class="btn btn-success btn-full" onclick="salvar()" id="btn-salvar">Confirmar e Salvar no GitHub</button>
     </div>
   `;
 }
 
+async function salvar() {
+  const btn = document.getElementById('btn-salvar');
+  const token = document.getElementById('gh-token-mobile').value.trim();
+  
+  if (!token || !token.startsWith('ghp_')) {
+    alert("⚠️ Por favor, cole um Token válido (começando com ghp_) para salvar.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "⏳ Enviando...";
+
+  // Prepara os dados para salvar
+  const repo = "stefanivs8-blip/inventario_estoque";
+  const path = "dados/historico_inventario.json"; // Nome do arquivo de destino
+  
+  const novoRegistro = {
+    data: inv.data,
+    hora: inv.hora,
+    colaborador: inv.colab,
+    turno: inv.turnoHora,
+    matricula: inv.matricula,
+    itens: inv.counts
+  };
+
+  try {
+    const url = `https://api.github.com/repos/${repo}/contents/${path}`;
+    
+    // 1. Tentar buscar o arquivo atual para não sobrescrever o histórico total
+    const getRes = await fetch(url, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+
+    let sha = "";
+    let conteudoAtual = [];
+
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
+      // Decodifica o conteúdo atual (se for um JSON de lista)
+      try {
+        conteudoAtual = JSON.parse(atob(data.content));
+      } catch(e) { conteudoAtual = []; }
+    }
+
+    // 2. Adiciona o novo registro à lista
+    conteudoAtual.push(novoRegistro);
+
+    // 3. Salva de volta no GitHub
+    const saveRes = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Authorization": `token ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: `Inventário: ${inv.colab} - ${inv.data}`,
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(conteudoAtual, null, 2)))),
+        sha: sha
+      })
+    });
+
+    if (saveRes.ok) {
+      alert('✅ Inventário salvo com sucesso no GitHub!');
+      location.href = 'index.html';
+    } else {
+      const err = await saveRes.json();
+      throw new Error(err.message);
+    }
+
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "Confirmar e Salvar no GitHub";
+    alert('❌ Erro real: ' + e.message);
+  }
+}
 async function salvar() {
   const btn = document.getElementById('btn-salvar');
   btn.disabled = true;
