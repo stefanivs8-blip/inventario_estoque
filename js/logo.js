@@ -1,1 +1,1 @@
-const PORTOCEL_LOGO = "https://i.ibb.co/p6Zp6Vp/portocel-logo.png";
+const PORTOCEL_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Logotipo_Portocel.png/800px-Logotipo_Portocel.png";
