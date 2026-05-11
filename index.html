@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventário Portocel</title>
+  <link rel="stylesheet" href="css/portocel.css">
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading" class="loading-overlay" style="display:none">
+  <div class="spinner"></div>
+  <div class="loading-text">Carregando...</div>
+</div>
+
+<!-- SETUP MODAL -->
+<div id="modal-setup" class="modal-bg open">
+  <div class="modal" style="max-width:520px">
+    <div style="text-align:center;margin-bottom:24px">
+      <img id="setup-logo" src="" alt="Portocel" style="height:48px;margin-bottom:16px">
+      <div class="modal-title">Configuração Inicial</div>
+      <p style="font-size:13px;color:#888;margin-top:4px">Conecte o sistema ao seu repositório GitHub para salvar os dados.</p>
+    </div>
+
+    <div class="setup-steps" style="margin-bottom:24px;background:#f8faff;border-radius:10px;padding:16px">
+      <div class="setup-step"><div><strong>Crie um repositório</strong> público no GitHub (ex: <code>portocel-inventario</code>)</div></div>
+      <div class="setup-step"><div>Acesse <strong>Settings → Developer Settings → Personal Access Tokens → Tokens (classic)</strong></div></div>
+      <div class="setup-step"><div>Gere um token com permissão <strong>repo</strong> (acesso total ao repositório)</div></div>
+      <div class="setup-step"><div>Preencha os campos abaixo e clique em <strong>Conectar</strong></div></div>
+    </div>
+
+    <div class="field">
+      <label>Usuário GitHub</label>
+      <input type="text" id="gh-owner" placeholder="ex: joaosilva">
+    </div>
+    <div class="field">
+      <label>Nome do Repositório</label>
+      <input type="text" id="gh-repo" placeholder="ex: portocel-inventario">
+    </div>
+    <div class="field">
+      <label>Personal Access Token</label>
+      <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
+    </div>
+    <div id="setup-error" class="alert alert-danger" style="display:none"></div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="doSetup()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      Conectar ao GitHub
+    </button>
+    <p style="text-align:center;font-size:11px;color:#aaa;margin-top:12px">O token fica salvo apenas no seu navegador, nunca é enviado a terceiros.</p>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="logo"><img id="header-logo" src="" alt="Portocel"></div>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+  </button>
+  <nav>
+    <a href="index.html" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Início
+    </a>
+    <a href="inventario.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg>
+      Inventário
+    </a>
+    <a href="historico.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Histórico
+    </a>
+    <a href="estoque.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 3H8l-2 4h12l-2-4z"/></svg>
+      Estoque
+    </a>
+  </nav>
+</header>
+
+<div class="page-wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Controle de Inventário</h1>
+    <p id="hero-sub">Portocel · Santos</p>
+  </div>
+
+  <!-- ALERTAS -->
+  <div id="alertas"></div>
+
+  <!-- MÉTRICAS -->
+  <div class="metrics" id="metrics"></div>
+
+  <!-- AÇÃO PRINCIPAL -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        Ação Rápida
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <a href="inventario.html" class="btn btn-primary btn-lg" style="flex-direction:column;height:auto;padding:20px;gap:8px;text-align:center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg>
+        <span>Realizar Inventário</span>
+      </a>
+      <a href="historico.html" class="btn btn-outline btn-lg" style="flex-direction:column;height:auto;padding:20px;gap:8px;text-align:center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Ver Histórico</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ITENS CRÍTICOS -->
+  <div class="card" id="criticos-card" style="display:none">
+    <div class="card-header">
+      <div class="card-title" style="color:var(--danger)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Itens Abaixo do Mínimo
+      </div>
+      <a href="estoque.html" class="btn btn-ghost btn-sm">Ver todos →</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Item</th><th>Categoria</th><th>Qtd atual</th><th>Mínimo</th><th>Status</th></tr></thead>
+        <tbody id="criticos-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ÚLTIMO INVENTÁRIO -->
+  <div class="card" id="ultimo-card" style="display:none">
+    <div class="card-header">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Último Inventário
+      </div>
+      <a href="historico.html" class="btn btn-ghost btn-sm">Ver histórico →</a>
+    </div>
+    <div id="ultimo-content"></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="js/logo.js"></script>
+<script src="js/github.js"></script>
+<script src="js/utils.js"></script>
+<script>
+// Apply logo everywhere
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('header-logo').src = PORTOCEL_LOGO;
+  document.getElementById('setup-logo').src = PORTOCEL_LOGO;
+  initNavToggle();
+
+  if (GH.isConfigured()) {
+    closeModal('modal-setup');
+    loadDashboard();
+  }
+});
+
+async function doSetup() {
+  const owner = document.getElementById('gh-owner').value.trim();
+  const repo  = document.getElementById('gh-repo').value.trim();
+  const token = document.getElementById('gh-token').value.trim();
+  const errEl = document.getElementById('setup-error');
+
+  if (!owner || !repo || !token) {
+    errEl.textContent = 'Preencha todos os campos.';
+    errEl.style.display = 'block'; return;
+  }
+
+  errEl.style.display = 'none';
+  showLoading('Conectando ao GitHub...');
+
+  try {
+    GH.saveConfig({ owner, repo, token });
+    await GH.testConnection();
+    // Try to initialize data files if they don't exist
+    await initRepoFiles();
+    hideLoading();
+    closeModal('modal-setup');
+    loadDashboard();
+    showToast('Conectado com sucesso!', 'success');
+  } catch (e) {
+    GH.saveConfig(null);
+    hideLoading();
+    errEl.textContent = 'Erro: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+async function initRepoFiles() {
+  // Check if data files exist, create if not
+  const defaultEstoque = {"items":[{"id":1,"name":"Cinto de Segurança - Hercules","cat":"EPI","qty":12,"min":8,"max":16},{"id":2,"name":"Cinto de Segurança com Lombar - Hercules","cat":"EPI","qty":14,"min":8,"max":16},{"id":3,"name":"Cone Barril","cat":"Sinalização","qty":20,"min":13,"max":26},{"id":4,"name":"Escada Paralela","cat":"Estrutura","qty":3,"min":4,"max":8},{"id":5,"name":"Galão de água","cat":"Outro","qty":2,"min":3,"max":6},{"id":6,"name":"Plataforma","cat":"Estrutura","qty":3,"min":3,"max":3},{"id":7,"name":"Rede de avarias","cat":"Içamento","qty":3,"min":2,"max":4},{"id":8,"name":"Corda Sisal","cat":"Operacional","qty":80,"min":70,"max":140},{"id":9,"name":"Trava Quedas - Hercules","cat":"EPI","qty":10,"min":8,"max":16},{"id":10,"name":"Cinto de Segurança com Lombar - Steelflex","cat":"EPI","qty":8,"min":12,"max":24},{"id":11,"name":"Cinto de Segurança - Steelflex","cat":"EPI","qty":7,"min":12,"max":24},{"id":12,"name":"Trava Quedas - Steelflex","cat":"EPI","qty":10,"min":12,"max":24},{"id":13,"name":"Escada Plataforma","cat":"Estrutura","qty":2,"min":2,"max":4},{"id":14,"name":"Capa de Rádio","cat":"Operacional","qty":20,"min":24,"max":0},{"id":15,"name":"Rádio","cat":"Operacional","qty":22,"min":24,"max":0},{"id":16,"name":"Carregador e Fonte da Rádio","cat":"Operacional","qty":24,"min":24,"max":0},{"id":17,"name":"Tablet","cat":"Sistema","qty":5,"min":5,"max":0},{"id":18,"name":"Coletor","cat":"Sistema","qty":8,"min":10,"max":0},{"id":19,"name":"Assoprador","cat":"Operacional","qty":2,"min":0,"max":0},{"id":20,"name":"Cone","cat":"Sinalização","qty":15,"min":0,"max":0},{"id":21,"name":"Vassouras","cat":"Limpeza","qty":8,"min":10,"max":0},{"id":22,"name":"Cinta","cat":"Içamento","qty":5,"min":0,"max":0},{"id":23,"name":"Gaiola de Resgate","cat":"Segurança","qty":1,"min":1,"max":0},{"id":24,"name":"Talha","cat":"Operacional","qty":4,"min":6,"max":0},{"id":25,"name":"Lona","cat":"Operacional","qty":3,"min":0,"max":0},{"id":26,"name":"Big Bag","cat":"Operacional","qty":10,"min":0,"max":0},{"id":27,"name":"Sinalizadores","cat":"Sinalização","qty":6,"min":0,"max":0},{"id":28,"name":"Alicate","cat":"Operacional","qty":4,"min":0,"max":0},{"id":29,"name":"Fita Stretch","cat":"Içamento","qty":3,"min":0,"max":0}],"equipe":[{"nome":"ADELSON","turno":"A"},{"nome":"LEONARDO","turno":"A"},{"nome":"DENIS","turno":"A"},{"nome":"STEFANI","turno":"B"},{"nome":"ACACIO","turno":"B"},{"nome":"RAFAEL","turno":"C"},{"nome":"MICHEL","turno":"C"},{"nome":"MAYKÊ","turno":"C"},{"nome":"THIAGO","turno":"D"},{"nome":"DJALMA","turno":"D"},{"nome":"EDINALDO","turno":"D"}],"emails":[{"nome":"Supervisores","email":"supervisores.santos@portocel.com.br"},{"nome":"Assistentes","email":"assistentes.santos@portocel.com.br"},{"nome":"Controladores","email":"controladores.santos@portocel.com.br"},{"nome":"André Melo","email":"andremelo@portocel.com.br"},{"nome":"Bianca Muniz","email":"biancamps@portocel.com.br"},{"nome":"Larissa dos Santos","email":"larissasc@suzano.com.br"}]};
+  const cfg = GH.getConfig();
+  const base = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents`;
+  const hdrs = { 'Authorization': `token ${cfg.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+
+  for (const [path, content] of [['data/estoque.json', defaultEstoque], ['data/historico.json', []]]) {
+    const check = await fetch(`${base}/${path}`, { headers: hdrs });
+    if (check.status === 404) {
+      await fetch(`${base}/${path}`, {
+        method: 'PUT', headers: hdrs,
+        body: JSON.stringify({ message: `Inicializa ${path}`, content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))) })
+      });
+    }
+  }
+}
+
+async function loadDashboard() {
+  showLoading('Carregando dados...');
+  try {
+    await APP.carregar();
+    renderDashboard();
+  } catch (e) {
+    showToast('Erro ao carregar: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderDashboard() {
+  const items = APP.estoque.items;
+  const criticos = items.filter(i => i.min && i.qty < i.min);
+  const normais  = items.filter(i => !i.min || i.qty >= i.min);
+  const t = getTurnoAtual();
+
+  document.getElementById('hero-sub').textContent =
+    `Portocel · Santos · ${new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long'})} · Turno ${t.key} (${t.label})`;
+
+  // Métricas
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Total Itens</div><div class="metric-val">${items.length}</div></div>
+    <div class="metric"><div class="metric-label">Status Normal</div><div class="metric-val success">${normais.length}</div></div>
+    <div class="metric"><div class="metric-label">Abaixo Mínimo</div><div class="metric-val ${criticos.length ? 'danger' : 'success'}">${criticos.length}</div></div>
+    <div class="metric"><div class="metric-label">Inventários</div><div class="metric-val">${APP.historico.length}</div></div>
+  `;
+
+  // Alertas
+  const alertEl = document.getElementById('alertas');
+  alertEl.innerHTML = criticos.length
+    ? `<div class="alert alert-danger"><strong>⚠ ${criticos.length} item(s) abaixo do estoque mínimo:</strong> ${criticos.map(i=>i.name).join(' · ')}</div>`
+    : `<div class="alert alert-success"><strong>✓ Todos os itens dentro do estoque mínimo.</strong></div>`;
+
+  // Itens críticos
+  if (criticos.length) {
+    document.getElementById('criticos-card').style.display = '';
+    document.getElementById('criticos-tbody').innerHTML = criticos.map(i => `
+      <tr>
+        <td style="font-weight:600">${i.name}</td>
+        <td><span class="badge badge-${catKey(i.cat)}">${i.cat}</span></td>
+        <td style="font-weight:700;color:var(--danger)">${i.qty}</td>
+        <td>${i.min}</td>
+        <td><span class="status-crit">⚠ Crítico</span></td>
+      </tr>`).join('');
+  }
+
+  // Último inventário
+  if (APP.historico.length) {
+    const ult = APP.historico[0];
+    document.getElementById('ultimo-card').style.display = '';
+    document.getElementById('ultimo-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+        <div><div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px">Data</div><div style="font-weight:700">${formatDateTime(ult.timestamp)}</div></div>
+        <div><div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px">Colaborador</div><div style="font-weight:700">${ult.colaborador}</div></div>
+        <div><div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px">Turno</div><div class="turno-tag" style="margin-top:2px">${ult.turno} · ${ult.turnoHora}</div></div>
+        <div><div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px">Matrícula</div><div style="font-weight:700">${ult.matricula || '—'}</div></div>
+      </div>
+      ${ult.abaixoMinimo?.length ? `<div class="alert alert-warning" style="margin-top:14px">⚠ ${ult.abaixoMinimo.length} item(s) estavam abaixo do mínimo neste inventário.</div>` : ''}
+    `;
+  }
+}
+</script>
+</body>
+</html>
